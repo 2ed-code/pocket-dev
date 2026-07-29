@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../core/widgets/home_card.dart';
-import '../explorer/explorer_page.dart';
-import '../git/git_page.dart';
-import '../projects/projects_page.dart';
-import '../terminal/terminal_page.dart';
+import '../workspace/workspace_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -12,63 +8,21 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("PocketDev")),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          children: [
-            HomeCard(
-              icon: Icons.folder_open,
-              title: "Projects",
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const ProjectsPage(),
-                ),
+      appBar: AppBar(
+        title: const Text("PocketDev"),
+      ),
+      body: Center(
+        child: FilledButton.icon(
+          icon: const Icon(Icons.code),
+          label: const Text("Open Workspace"),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const WorkspacePage(),
               ),
-            ),
-            HomeCard(
-              icon: Icons.folder,
-              title: "Explorer",
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const ExplorerPage(),
-                ),
-              ),
-            ),
-            HomeCard(
-              icon: Icons.terminal,
-              title: "Terminal",
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const TerminalPage(),
-                ),
-              ),
-            ),
-            HomeCard(
-              icon: Icons.source,
-              title: "Git",
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const GitPage(),
-                ),
-              ),
-            ),
-            const HomeCard(
-              icon: Icons.code,
-              title: "Editor",
-            ),
-            const HomeCard(
-              icon: Icons.settings,
-              title: "Settings",
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
