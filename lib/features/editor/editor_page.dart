@@ -1,5 +1,8 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_code_editor/flutter_code_editor.dart';
+import 'package:highlight/languages/dart.dart';
 
 class EditorPage extends StatefulWidget {
   final String path;
@@ -14,21 +17,24 @@ class EditorPage extends StatefulWidget {
 }
 
 class _EditorPageState extends State<EditorPage> {
-  final controller = TextEditingController();
+  late CodeController controller;
 
   @override
   void initState() {
     super.initState();
-    load();
-  }
 
-  Future<void> load() async {
+    String text = "";
+
     final file = File(widget.path);
 
-    if (await file.exists()) {
-      controller.text = await file.readAsString();
-      setState(() {});
+    if (file.existsSync()) {
+      text = file.readAsStringSync();
     }
+
+    controller = CodeController(
+      text: text,
+      language: dart,
+    );
   }
 
   Future<void> save() async {
@@ -50,21 +56,15 @@ class _EditorPageState extends State<EditorPage> {
         title: Text(widget.path.split("/").last),
         actions: [
           IconButton(
-            icon: const Icon(Icons.save),
             onPressed: save,
-          )
+            icon: const Icon(Icons.save),
+          ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(12),
-        child: TextField(
+      body: CodeTheme(
+        data: const CodeThemeData(),
+        child: CodeField(
           controller: controller,
-          expands: true,
-          maxLines: null,
-          minLines: null,
-          decoration: const InputDecoration(
-            border: InputBorder.none,
-          ),
         ),
       ),
     );
