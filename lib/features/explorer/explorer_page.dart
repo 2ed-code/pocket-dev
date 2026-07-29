@@ -1,15 +1,14 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+
+import '../../core/services/file_service.dart';
 import '../editor/editor_page.dart';
 
 class ExplorerPage extends StatefulWidget {
   final String? path;
 
-  const ExplorerPage({
-    super.key,
-    this.path,
-  });
+  const ExplorerPage({super.key, this.path});
 
   @override
   State<ExplorerPage> createState() => _ExplorerPageState();
@@ -38,6 +37,46 @@ class _ExplorerPageState extends State<ExplorerPage> {
     setState(() {});
   }
 
+  Future<void> create(bool folder) async {
+    final controller = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(folder ? "New Folder" : "New File"),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            hintText: "Name",
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          FilledButton(
+            onPressed: () async {
+              final path =
+                  "${current.path}/${controller.text.trim()}";
+
+              if (folder) {
+                await FileService.createFolder(path);
+              } else {
+                await FileService.createFile(path);
+              }
+
+              if (mounted) Navigator.pop(context);
+            },
+            child: const Text("Create"),
+          ),
+        ],
+      ),
+    );
+
+    load();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,9 +84,17 @@ class _ExplorerPageState extends State<ExplorerPage> {
         title: Text(current.path.split("/").last),
         actions: [
           IconButton(
+            icon: const Icon(Icons.create_new_folder),
+            onPressed: () => create(true),
+          ),
+          IconButton(
+            icon: const Icon(Icons.note_add),
+            onPressed: () => create(false),
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: load,
-          )
+          ),
         ],
       ),
       body: ListView.builder(
