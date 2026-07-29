@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../explorer/explorer_page.dart';
 import '../projects/projects_page.dart';
 import '../terminal/terminal_page.dart';
 import '../../core/widgets/home_card.dart';
@@ -22,32 +23,32 @@ class HomePage extends StatelessWidget {
               title: "Projects",
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const ProjectsPage(),
-                ),
+                MaterialPageRoute(builder: (_) => const ProjectsPage()),
               ),
             ),
-            const HomeCard(
-              icon: Icons.code,
-              title: "Editor",
+            HomeCard(
+              icon: Icons.folder,
+              title: "Explorer",
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ExplorerPage()),
+              ),
             ),
             HomeCard(
               icon: Icons.terminal,
               title: "Terminal",
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const TerminalPage(),
-                ),
+                MaterialPageRoute(builder: (_) => const TerminalPage()),
               ),
+            ),
+            const HomeCard(
+              icon: Icons.code,
+              title: "Editor",
             ),
             const HomeCard(
               icon: Icons.source,
               title: "Git",
-            ),
-            const HomeCard(
-              icon: Icons.cloud,
-              title: "Codespaces",
             ),
             const HomeCard(
               icon: Icons.settings,
