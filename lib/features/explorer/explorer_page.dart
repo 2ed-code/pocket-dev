@@ -28,7 +28,15 @@ class _ExplorerPageState extends State<ExplorerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Explorer")),
+      appBar: AppBar(
+        title: const Text("Explorer"),
+        actions: [
+          IconButton(
+            onPressed: load,
+            icon: const Icon(Icons.refresh),
+          )
+        ],
+      ),
       body: ListView.builder(
         itemCount: files.length,
         itemBuilder: (_, i) {
@@ -40,9 +48,8 @@ class _ExplorerPageState extends State<ExplorerPage> {
                   ? Icons.folder
                   : Icons.insert_drive_file,
             ),
-            title: Text(
-              f.path.split("/").last,
-            ),
+            title: Text(f.path.split("/").last),
+            subtitle: Text(f.path),
             onTap: () {
               if (f is File) {
                 Navigator.push(
