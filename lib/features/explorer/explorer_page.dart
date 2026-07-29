@@ -1,5 +1,8 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
+
+import '../editor/editor_page.dart';
 
 class ExplorerPage extends StatefulWidget {
   const ExplorerPage({super.key});
@@ -17,20 +20,15 @@ class _ExplorerPageState extends State<ExplorerPage> {
     load();
   }
 
-  Future<void> load() async {
-    final dir = Directory.current;
-
-    setState(() {
-      files = dir.listSync();
-    });
+  void load() {
+    files = Directory.current.listSync();
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Explorer"),
-      ),
+      appBar: AppBar(title: const Text("Explorer")),
       body: ListView.builder(
         itemCount: files.length,
         itemBuilder: (_, i) {
@@ -38,12 +36,25 @@ class _ExplorerPageState extends State<ExplorerPage> {
 
           return ListTile(
             leading: Icon(
-              f is Directory ? Icons.folder : Icons.insert_drive_file,
+              f is Directory
+                  ? Icons.folder
+                  : Icons.insert_drive_file,
             ),
             title: Text(
               f.path.split("/").last,
             ),
-            subtitle: Text(f.path),
+            onTap: () {
+              if (f is File) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EditorPage(
+                      path: f.path,
+                    ),
+                  ),
+                );
+              }
+            },
           );
         },
       ),
