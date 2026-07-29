@@ -50,21 +50,28 @@ class _EditorPageState extends State<EditorPage> {
   }
 
   @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.path.split("/").last),
+        title: Text(widget.path.split('/').last),
         actions: [
           IconButton(
-            onPressed: save,
             icon: const Icon(Icons.save),
+            onPressed: save,
           ),
         ],
       ),
       body: CodeTheme(
-        data: const CodeThemeData(),
+        data: CodeThemeData(),
         child: CodeField(
           controller: controller,
+          expands: true,
         ),
       ),
     );
