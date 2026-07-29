@@ -37,18 +37,42 @@ class _ExplorerPageState extends State<ExplorerPage> {
     setState(() {});
   }
 
-  Future<void> create(bool folder) async {
-    final controller = TextEditingController();
+  Future<void> delete(FileSystemEntity file) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Delete"),
+        content: Text(file.path.split("/").last),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Delete"),
+          ),
+        ],
+      ),
+    );
+
+    if (ok == true) {
+      await FileService.delete(file.path);
+      load();
+    }
+  }
+
+  Future<void> rename(FileSystemEntity file) async {
+    final controller = TextEditingController(
+      text: file.path.split("/").last,
+    );
 
     await showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(folder ? "New Folder" : "New File"),
+        title: const Text("Rename"),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            hintText: "Name",
-          ),
         ),
         actions: [
           TextButton(
@@ -57,18 +81,16 @@ class _ExplorerPageState extends State<ExplorerPage> {
           ),
           FilledButton(
             onPressed: () async {
-              final path =
-                  "${current.path}/${controller.text.trim()}";
+              final parent = File(file.path).parent.path;
 
-              if (folder) {
-                await FileService.createFolder(path);
-              } else {
-                await FileService.createFile(path);
-              }
+              await FileService.rename(
+                file.path,
+                "$parent/${controller.text}",
+              );
 
               if (mounted) Navigator.pop(context);
             },
-            child: const Text("Create"),
+            child: const Text("Save"),
           ),
         ],
       ),
@@ -77,25 +99,42 @@ class _ExplorerPageState extends State<ExplorerPage> {
     load();
   }
 
+  Future<void> menu(FileSystemEntity file) async {
+    final value = await showModalBottomSheet<String>(
+      context: context,
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit),
+              title: const Text("Rename"),
+              onTap: () => Navigator.pop(context, "rename"),
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete),
+              title: const Text("Delete"),
+              onTap: () => Navigator.pop(context, "delete"),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (value == "rename") {
+      rename(file);
+    }
+
+    if (value == "delete") {
+      delete(file);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(current.path.split("/").last),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.create_new_folder),
-            onPressed: () => create(true),
-          ),
-          IconButton(
-            icon: const Icon(Icons.note_add),
-            onPressed: () => create(false),
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: load,
-          ),
-        ],
       ),
       body: ListView.builder(
         itemCount: files.length,
@@ -109,6 +148,7 @@ class _ExplorerPageState extends State<ExplorerPage> {
                   : Icons.insert_drive_file,
             ),
             title: Text(file.path.split("/").last),
+            onLongPress: () => menu(file),
             onTap: () {
               if (file is Directory) {
                 Navigator.push(
