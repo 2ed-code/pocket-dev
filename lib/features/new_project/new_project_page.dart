@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/services/terminal_service.dart';
 
 class NewProjectPage extends StatefulWidget {
   const NewProjectPage({super.key});
@@ -9,6 +10,40 @@ class NewProjectPage extends StatefulWidget {
 
 class _NewProjectPageState extends State<NewProjectPage> {
   final controller = TextEditingController();
+
+  bool loading = false;
+
+  Future<void> createProject() async {
+    if (controller.text.isEmpty) return;
+
+    setState(() {
+      loading = true;
+    });
+
+    final result = await TerminalService.run(
+      "flutter",
+      [
+        "create",
+        controller.text,
+      ],
+    );
+
+    setState(() {
+      loading = false;
+    });
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Result"),
+        content: SingleChildScrollView(
+          child: Text(result),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,21 +59,14 @@ class _NewProjectPageState extends State<NewProjectPage> {
               controller: controller,
               decoration: const InputDecoration(
                 labelText: "Project Name",
-                border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 20),
             FilledButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      "Soon: ${controller.text}",
-                    ),
-                  ),
-                );
-              },
-              child: const Text("Create"),
+              onPressed: loading ? null : createProject,
+              child: Text(
+                loading ? "Creating..." : "Create",
+              ),
             ),
           ],
         ),
