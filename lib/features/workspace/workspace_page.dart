@@ -2,11 +2,16 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import '../explorer/explorer_page.dart';
-import '../git/git_page.dart';
-import '../terminal/terminal_page.dart';
+import '../editor/editor_panel.dart';
+import '../explorer/explorer_panel.dart';
+import '../terminal/terminal_panel.dart';
 
+import 'widgets/activity_bar.dart';
+import 'widgets/command_palette.dart';
+import 'widgets/editor_tabs.dart';
+import 'widgets/side_bar.dart';
 import 'widgets/status_bar.dart';
+import 'widgets/terminal_dock.dart';
 
 class WorkspacePage extends StatefulWidget {
   const WorkspacePage({super.key});
@@ -16,78 +21,91 @@ class WorkspacePage extends StatefulWidget {
 }
 
 class _WorkspacePageState extends State<WorkspacePage> {
-  int page = 0;
+  int activity = 0;
 
-  late final List<Widget> pages;
+  String? currentFile;
 
-  @override
-  void initState() {
-    super.initState();
+  final List<String> tabs = [];
 
-    pages = [
-      ExplorerPage(
-        path: Directory.current.path,
-      ),
-      const Center(
-        child: Text(
-          "Open a file from Explorer",
-          style: TextStyle(
-            fontSize: 18,
-          ),
-        ),
-      ),
-      const TerminalPage(),
-      const GitPage(),
-    ];
-  }
+  int selectedTab = 0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Pocket Dev"),
-      ),
-
-      body: Column(
-        children: [
-          Expanded(
-            child: pages[page],
-          ),
-
-          const StatusBar(
-            text: "Pocket Dev • Ready",
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: "Command Palette",
+            onPressed: () {
+              CommandPalette.show(context);
+            },
           ),
         ],
       ),
+      body: Column(
+        children: [
+          Expanded(
+            child: Row(
+              children: [
+                ActivityBar(
+                  index: activity,
+                  onChanged: (i) {
+                    setState(() {
+                      activity = i;
+                    });
+                  },
+                ),
+                SideBar(
+                  child: ExplorerPanel(
+                    path: Directory.current.path,
+                    onFileSelected: (path) {
+                      final name = path.split('/').last;
 
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: page,
+                      setState(() {
+                        currentFile = path;
 
-        onDestinationSelected: (i) {
-          setState(() {
-            page = i;
-          });
-        },
+                        if (!tabs.contains(name)) {
+                          tabs.add(name);
+                        }
 
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.folder),
-            label: "Explorer",
+                        selectedTab = tabs.indexOf(name);
+                      });
+                    },
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      EditorTabs(
+                        tabs: tabs.isEmpty ? const ["Welcome"] : tabs,
+                        selected: selectedTab,
+                        onSelected: (i) {
+                          setState(() {
+                            selectedTab = i;
+                          });
+                        },
+                      ),
+                      Expanded(
+                        child: EditorPanel(
+                          path: currentFile,
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 220,
+                        child: TerminalDock(
+                          child: TerminalPanel(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-
-          NavigationDestination(
-            icon: Icon(Icons.code),
-            label: "Editor",
-          ),
-
-          NavigationDestination(
-            icon: Icon(Icons.terminal),
-            label: "Terminal",
-          ),
-
-          NavigationDestination(
-            icon: Icon(Icons.source),
-            label: "Git",
+          const StatusBar(
+            text: "Pocket Dev • Ready",
           ),
         ],
       ),

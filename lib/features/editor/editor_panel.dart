@@ -1,115 +1,135 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
 
-import '../../core/state/editor_state.dart';
-import '../../core/state/workspace_state.dart';
-import '../../core/widgets/line_numbers.dart';
+class EditorPanel extends StatefulWidget {
+  final String? path;
 
-class EditorPanel extends StatelessWidget {
-  const EditorPanel({super.key});
+  const EditorPanel({
+    super.key,
+    this.path,
+  });
+
+  @override
+  State<EditorPanel> createState() => _EditorPanelState();
+}
+
+class _EditorPanelState extends State<EditorPanel> {
+  final controller = TextEditingController();
+
+  bool dirty = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+
+    controller.addListener(() {
+      if (!dirty) {
+        setState(() {
+          dirty = true;
+        });
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(EditorPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.path != widget.path) {
+      _load();
+    }
+  }
+
+  void _load() {
+    dirty = false;
+
+    if (widget.path == null) {
+      controller.clear();
+      return;
+    }
+
+    final file = File(widget.path!);
+
+    if (file.existsSync()) {
+      controller.text = file.readAsStringSync();
+    } else {
+      controller.clear();
+    }
+  }
+
+  Future<void> save() async {
+    if (widget.path == null) return;
+
+    await File(widget.path!).writeAsString(controller.text);
+
+    if (!mounted) return;
+
+    setState(() {
+      dirty = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Saved"),
+        duration: Duration(milliseconds: 600),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final workspace = context.watch<WorkspaceState>();
+    return Focus(
+      autofocus: true,
+      onKeyEvent: (_, event) {
+        if (event is KeyDownEvent &&
+            event.logicalKey == LogicalKeyboardKey.keyS &&
+            HardwareKeyboard.instance.isControlPressed) {
+          save();
+          return KeyEventResult.handled;
+        }
 
-    if (workspace.currentFile == null) {
-      return Container(
-        color: const Color(0xff1e1e1e),
-        child: const Center(
-          child: Text(
-            "Open a file",
-            style: TextStyle(color: Colors.white),
-          ),
-        ),
-      );
-    }
-
-    final file = workspace.currentFile!;
-
-    final controller =
-        context.read<EditorState>().controllerFor(
-              file.path,
-              file.content,
-            );
-
-    return Container(
-      color: const Color(0xff1e1e1e),
+        return KeyEventResult.ignored;
+      },
       child: Column(
         children: [
           Container(
             height: 38,
-            color: const Color(0xff252526),
+            color: const Color(0xff2d2d30),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
               children: [
                 Expanded(
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: workspace.openedFiles.length,
-                    itemBuilder: (_, index) {
-                      final tab = workspace.openedFiles[index];
-
-                      return InkWell(
-                        onTap: () {
-                          workspace.select(index);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                          ),
-                          color: workspace.selectedIndex == index
-                              ? const Color(0xff1e1e1e)
-                              : const Color(0xff2d2d2d),
-                          child: Center(
-                            child: Text(
-                              tab.name,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
+                  child: Text(
+                    widget.path == null
+                        ? "No file"
+                        : "${widget.path!.split('/').last}${dirty ? " •" : ""}",
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ),
                 IconButton(
-                  onPressed: workspace.saveCurrentFile,
-                  icon: const Icon(
-                    Icons.save,
-                    color: Colors.white,
-                  ),
+                  tooltip: "Save",
+                  onPressed: save,
+                  icon: const Icon(Icons.save),
                 ),
               ],
             ),
           ),
-
           Expanded(
-            child: Row(
-              children: [
-                LineNumbers(
-                  text: controller.text,
-                ),
-
-                Expanded(
-                  child: TextField(
-                    controller: controller,
-                    expands: true,
-                    minLines: null,
-                    maxLines: null,
-                    onChanged: workspace.updateContent,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontFamily: "monospace",
-                      fontSize: 14,
-                    ),
-                    decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.all(16),
-                    ),
-                  ),
-                ),
-              ],
+            child: TextField(
+              controller: controller,
+              expands: true,
+              maxLines: null,
+              minLines: null,
+              style: const TextStyle(
+                fontFamily: "monospace",
+              ),
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.all(16),
+              ),
             ),
           ),
         ],

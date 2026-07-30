@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/open_file.dart';
 
@@ -10,11 +10,13 @@ class WorkspaceState extends ChangeNotifier {
   int selectedIndex = -1;
 
   OpenFile? get currentFile {
-    if (selectedIndex == -1) return null;
+    if (selectedIndex < 0 || selectedIndex >= openedFiles.length) {
+      return null;
+    }
     return openedFiles[selectedIndex];
   }
 
-  void openFile(String path) {
+  Future<void> openFile(String path) async {
     final index = openedFiles.indexWhere((e) => e.path == path);
 
     if (index != -1) {
@@ -29,7 +31,7 @@ class WorkspaceState extends ChangeNotifier {
       OpenFile(
         path: path,
         name: file.uri.pathSegments.last,
-        content: file.readAsStringSync(),
+        content: await file.readAsString(),
       ),
     );
 

@@ -7,38 +7,30 @@ class WelcomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: const Color(0xff1e1e1e),
-      child: Center(
+      child: const Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          mainAxisSize: MainAxisSize.min,
+          children: [
             Icon(
-              Icons.code,
-              size: 90,
+              Icons.flutter_dash,
+              size: 80,
               color: Colors.blue,
             ),
             SizedBox(height: 20),
             Text(
-              "Pocket Dev",
+              'Pocket Dev',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 34,
+                fontSize: 28,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 10),
+            SizedBox(height: 8),
             Text(
-              "Professional Mobile IDE",
+              'Open a project to start coding',
               style: TextStyle(
                 color: Colors.white70,
                 fontSize: 16,
-              ),
-            ),
-            SizedBox(height: 35),
-            Text(
-              "Open a file from Explorer",
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 14,
               ),
             ),
           ],
