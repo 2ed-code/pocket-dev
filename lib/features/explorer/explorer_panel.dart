@@ -14,89 +14,122 @@ class ExplorerPanel extends StatefulWidget {
 }
 
 class _ExplorerPanelState extends State<ExplorerPanel> {
-  List<FileNode> nodes = [];
+  late FileNode root;
 
   @override
   void initState() {
     super.initState();
-    load();
+    root = _buildTree(Directory.current);
+    root.expanded = true;
   }
 
-  void load() {
-    final dir = Directory.current;
+  FileNode _buildTree(Directory dir) {
+    final children = <FileNode>[];
 
-    nodes = dir.listSync().map((e) {
-      return FileNode(
-        name: e.uri.pathSegments.last,
-        path: e.path,
-        isDirectory: e is Directory,
-      );
-    }).toList();
+    for (final entity in dir.listSync()) {
+      if (entity is Directory) {
+        children.add(_buildTree(entity));
+      } else if (entity is File) {
+        children.add(
+          FileNode(
+            name: entity.uri.pathSegments.last,
+            path: entity.path,
+            isDirectory: false,
+          ),
+        );
+      }
+    }
 
-    nodes.sort((a, b) {
-      if (a.isDirectory && !b.isDirectory) return -1;
-      if (!a.isDirectory && b.isDirectory) return 1;
+    children.sort((a, b) {
+      if (a.isDirectory != b.isDirectory) {
+        return a.isDirectory ? -1 : 1;
+      }
       return a.name.compareTo(b.name);
     });
 
-    setState(() {});
+    return FileNode(
+      name: dir.uri.pathSegments.isEmpty
+          ? dir.path
+          : dir.uri.pathSegments.last,
+      path: dir.path,
+      isDirectory: true,
+      children: children,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: const Color(0xFF252526),
-      child: Column(
-        children: [
-          Container(
-            height: 42,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: const Text(
-              "EXPLORER",
-              style: TextStyle(
-                color: Colors.white70,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: nodes.length,
-              itemBuilder: (context, index) {
-                final node = nodes[index];
+      child: ListView(
+        children: _buildWidgets(root.children, 0),
+      ),
+    );
+  }
 
-                return ListTile(
-                  dense: true,
-                  leading: Icon(
+  List<Widget> _buildWidgets(List<FileNode> nodes, int level) {
+    final widgets = <Widget>[];
+
+    for (final node in nodes) {
+      widgets.add(
+        InkWell(
+          onTap: () {
+            if (node.isDirectory) {
+              setState(() {
+                node.expanded = !node.expanded;
+              });
+            } else {
+              context.read<WorkspaceState>().openFile(node.path);
+            }
+          },
+          child: Padding(
+            padding: EdgeInsets.only(left: level * 16.0),
+            child: SizedBox(
+              height: 30,
+              child: Row(
+                children: [
+                  if (node.isDirectory)
+                    Icon(
+                      node.expanded
+                          ? Icons.keyboard_arrow_down
+                          : Icons.keyboard_arrow_right,
+                      size: 18,
+                      color: Colors.white70,
+                    )
+                  else
+                    const SizedBox(width: 18),
+                  Icon(
                     node.isDirectory
                         ? Icons.folder
                         : Icons.insert_drive_file,
+                    size: 18,
                     color: node.isDirectory
                         ? Colors.amber
                         : Colors.white70,
-                    size: 18,
                   ),
-                  title: Text(
-                    node.name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      node.name,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
-                  onTap: () {
-                    if (!node.isDirectory) {
-                      context
-                          .read<WorkspaceState>()
-                          .openFile(node.path);
-                    }
-                  },
-                );
-              },
+                ],
+              ),
             ),
           ),
-        ],
-      ),
-    );
+        ),
+      );
+
+      if (node.isDirectory && node.expanded) {
+        widgets.addAll(_buildWidgets(node.children, level + 1));
+      }
+    }
+
+    return widgets;
   }
 }
