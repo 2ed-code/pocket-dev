@@ -1,48 +1,57 @@
 import 'package:flutter/material.dart';
 
-import '../explorer/explorer_panel.dart';
-import '../editor/editor_panel.dart';
-import '../terminal/terminal_panel.dart';
+import '../explorer/explorer_page.dart';
+import '../git/git_page.dart';
+import '../terminal/terminal_page.dart';
+import 'widgets/sidebar.dart';
+import 'widgets/editor_tabs.dart';
 
-class WorkspacePage extends StatelessWidget {
+class WorkspacePage extends StatefulWidget {
   const WorkspacePage({super.key});
 
   @override
+  State<WorkspacePage> createState() => _WorkspacePageState();
+}
+
+class _WorkspacePageState extends State<WorkspacePage> {
+  int index = 0;
+
+  @override
   Widget build(BuildContext context) {
+    Widget panel;
+
+    switch (index) {
+      case 0:
+        panel = const ExplorerPage();
+        break;
+      case 1:
+        panel = const TerminalPage();
+        break;
+      default:
+        panel = const GitPage();
+    }
+
     return Scaffold(
       body: SafeArea(
-        child: Column(
+        child: Row(
           children: [
-            Container(
-              height: 42,
-              color: const Color(0xFF1E1E1E),
-              alignment: Alignment.centerLeft,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: const Text(
-                "PocketDev",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+            WorkspaceSidebar(
+              index: index,
+              onSelect: (i) {
+                setState(() {
+                  index = i;
+                });
+              },
             ),
+            const VerticalDivider(width: 1),
             Expanded(
-              child: Row(
-                children: const [
-                  SizedBox(
-                    width: 280,
-                    child: ExplorerPanel(),
-                  ),
-                  VerticalDivider(width: 1),
-                  Expanded(
-                    child: EditorPanel(),
-                  ),
+              child: Column(
+                children: [
+                  const EditorTabs(),
+                  const Divider(height: 1),
+                  Expanded(child: panel),
                 ],
               ),
-            ),
-            SizedBox(
-              height: 220,
-              child: TerminalPanel(),
             ),
           ],
         ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../core/services/terminal_service.dart';
 
 class GitPage extends StatefulWidget {
@@ -11,25 +10,22 @@ class GitPage extends StatefulWidget {
 
 class _GitPageState extends State<GitPage> {
   String output = "";
-  bool running = false;
+  bool loading = false;
 
   Future<void> run(List<String> cmd) async {
-    if (cmd.isEmpty) return;
-
     setState(() {
-      running = true;
-      output = "Running...\n";
+      loading = true;
     });
 
     final result = await TerminalService.run(
       cmd.first,
-      cmd.skip(1).toList(),
+      cmd.sublist(1),
     );
 
     if (!mounted) return;
 
     setState(() {
-      running = false;
+      loading = false;
       output = result;
     });
   }
@@ -37,9 +33,7 @@ class _GitPageState extends State<GitPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Git"),
-      ),
+      appBar: AppBar(title: const Text("Git")),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -49,15 +43,15 @@ class _GitPageState extends State<GitPage> {
               runSpacing: 8,
               children: [
                 FilledButton(
-                  onPressed: running ? null : () => run(["git", "status"]),
+                  onPressed: loading ? null : () => run(["git", "status"]),
                   child: const Text("Status"),
                 ),
                 FilledButton(
-                  onPressed: running ? null : () => run(["git", "pull"]),
+                  onPressed: loading ? null : () => run(["git", "pull"]),
                   child: const Text("Pull"),
                 ),
                 FilledButton(
-                  onPressed: running ? null : () => run(["git", "push"]),
+                  onPressed: loading ? null : () => run(["git", "push"]),
                   child: const Text("Push"),
                 ),
               ],

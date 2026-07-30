@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../core/services/terminal_service.dart';
 
 class TerminalPage extends StatefulWidget {
@@ -47,9 +46,7 @@ class _TerminalPageState extends State<TerminalPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Terminal"),
-      ),
+      appBar: AppBar(title: const Text("Terminal")),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
