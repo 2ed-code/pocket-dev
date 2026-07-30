@@ -1,29 +1,28 @@
 import 'package:flutter/material.dart';
 
 class EditorState extends ChangeNotifier {
-  final List<String> files = [];
+  final Map<String, TextEditingController> _controllers = {};
 
-  int current = 0;
+  TextEditingController controllerFor(
+    String path,
+    String content,
+  ) {
+    return _controllers.putIfAbsent(
+      path,
+      () => TextEditingController(text: content),
+    );
+  }
 
-  void open(String path) {
-    if (!files.contains(path)) {
-      files.add(path);
-    }
-
-    current = files.indexOf(path);
+  void disposeController(String path) {
+    _controllers.remove(path)?.dispose();
     notifyListeners();
   }
 
-  void close(String path) {
-    files.remove(path);
-
-    if (current >= files.length) {
-      current = files.isEmpty ? 0 : files.length - 1;
+  @override
+  void dispose() {
+    for (final c in _controllers.values) {
+      c.dispose();
     }
-
-    notifyListeners();
+    super.dispose();
   }
-
-  String? get currentFile =>
-      files.isEmpty ? null : files[current];
 }

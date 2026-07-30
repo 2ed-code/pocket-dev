@@ -1,17 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/state/editor_state.dart';
 import '../../core/state/workspace_state.dart';
+import '../../core/widgets/line_numbers.dart';
 
-class EditorPanel extends StatefulWidget {
+class EditorPanel extends StatelessWidget {
   const EditorPanel({super.key});
-
-  @override
-  State<EditorPanel> createState() => _EditorPanelState();
-}
-
-class _EditorPanelState extends State<EditorPanel> {
-  final TextEditingController controller = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -29,12 +24,13 @@ class _EditorPanelState extends State<EditorPanel> {
       );
     }
 
-    controller.value = TextEditingValue(
-      text: workspace.currentFile!.content,
-      selection: TextSelection.collapsed(
-        offset: workspace.currentFile!.content.length,
-      ),
-    );
+    final file = workspace.currentFile!;
+
+    final controller =
+        context.read<EditorState>().controllerFor(
+              file.path,
+              file.content,
+            );
 
     return Container(
       color: const Color(0xff1e1e1e),
@@ -49,33 +45,28 @@ class _EditorPanelState extends State<EditorPanel> {
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     itemCount: workspace.openedFiles.length,
-                    itemBuilder: (context, index) {
+                    itemBuilder: (_, index) {
                       final tab = workspace.openedFiles[index];
 
                       return InkWell(
-                        onTap: () => workspace.select(index),
+                        onTap: () {
+                          workspace.select(index);
+                        },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          margin: const EdgeInsets.only(right: 1),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                          ),
                           color: workspace.selectedIndex == index
                               ? const Color(0xff1e1e1e)
                               : const Color(0xff2d2d2d),
-                          child: Row(
-                            children: [
-                              Text(
-                                tab.name,
-                                style: const TextStyle(color: Colors.white),
+                          child: Center(
+                            child: Text(
+                              tab.name,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
                               ),
-                              const SizedBox(width: 8),
-                              GestureDetector(
-                                onTap: () => workspace.close(index),
-                                child: const Icon(
-                                  Icons.close,
-                                  size: 16,
-                                  color: Colors.white70,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
                       );
@@ -83,9 +74,7 @@ class _EditorPanelState extends State<EditorPanel> {
                   ),
                 ),
                 IconButton(
-                  onPressed: () async {
-                    await workspace.saveCurrentFile();
-                  },
+                  onPressed: workspace.saveCurrentFile,
                   icon: const Icon(
                     Icons.save,
                     color: Colors.white,
@@ -94,22 +83,33 @@ class _EditorPanelState extends State<EditorPanel> {
               ],
             ),
           ),
+
           Expanded(
-            child: TextField(
-              controller: controller,
-              expands: true,
-              minLines: null,
-              maxLines: null,
-              onChanged: workspace.updateContent,
-              style: const TextStyle(
-                color: Colors.white,
-                fontFamily: 'monospace',
-                fontSize: 14,
-              ),
-              decoration: const InputDecoration(
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.all(16),
-              ),
+            child: Row(
+              children: [
+                LineNumbers(
+                  text: controller.text,
+                ),
+
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    expands: true,
+                    minLines: null,
+                    maxLines: null,
+                    onChanged: workspace.updateContent,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontFamily: "monospace",
+                      fontSize: 14,
+                    ),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.all(16),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
