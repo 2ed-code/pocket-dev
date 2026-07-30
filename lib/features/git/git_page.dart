@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../core/services/terminal_service.dart';
 
 class GitPage extends StatefulWidget {
@@ -10,14 +11,25 @@ class GitPage extends StatefulWidget {
 
 class _GitPageState extends State<GitPage> {
   String output = "";
+  bool running = false;
 
   Future<void> run(List<String> cmd) async {
-    final result = await TerminalService.run(
-      cmd.first,
-      cmd.sublist(1),
-    );
+    if (cmd.isEmpty) return;
 
     setState(() {
+      running = true;
+      output = "Running...\n";
+    });
+
+    final result = await TerminalService.run(
+      cmd.first,
+      cmd.skip(1).toList(),
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      running = false;
       output = result;
     });
   }
@@ -25,7 +37,9 @@ class _GitPageState extends State<GitPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Git")),
+      appBar: AppBar(
+        title: const Text("Git"),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -35,15 +49,15 @@ class _GitPageState extends State<GitPage> {
               runSpacing: 8,
               children: [
                 FilledButton(
-                  onPressed: () => run(["git","status"]),
+                  onPressed: running ? null : () => run(["git", "status"]),
                   child: const Text("Status"),
                 ),
                 FilledButton(
-                  onPressed: () => run(["git","pull"]),
+                  onPressed: running ? null : () => run(["git", "pull"]),
                   child: const Text("Pull"),
                 ),
                 FilledButton(
-                  onPressed: () => run(["git","push"]),
+                  onPressed: running ? null : () => run(["git", "push"]),
                   child: const Text("Push"),
                 ),
               ],
@@ -64,7 +78,7 @@ class _GitPageState extends State<GitPage> {
                   ),
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),

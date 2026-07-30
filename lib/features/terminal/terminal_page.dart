@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../core/services/terminal_service.dart';
 
 class TerminalPage extends StatefulWidget {
@@ -10,27 +11,45 @@ class TerminalPage extends StatefulWidget {
 
 class _TerminalPageState extends State<TerminalPage> {
   final controller = TextEditingController();
+
   String output = "";
+  bool running = false;
 
   Future<void> run() async {
     if (controller.text.trim().isEmpty) return;
 
     final parts = controller.text.trim().split(" ");
 
+    setState(() {
+      running = true;
+      output = "Running...\n";
+    });
+
     final result = await TerminalService.run(
       parts.first,
       parts.skip(1).toList(),
     );
 
+    if (!mounted) return;
+
     setState(() {
+      running = false;
       output = result;
     });
   }
 
   @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Terminal")),
+      appBar: AppBar(
+        title: const Text("Terminal"),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -45,15 +64,15 @@ class _TerminalPageState extends State<TerminalPage> {
             ),
             const SizedBox(height: 12),
             FilledButton(
-              onPressed: run,
-              child: const Text("Run"),
+              onPressed: running ? null : run,
+              child: Text(running ? "Running..." : "Run"),
             ),
             const SizedBox(height: 20),
             Expanded(
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(12),
                 color: Colors.black,
+                padding: const EdgeInsets.all(12),
                 child: SingleChildScrollView(
                   child: SelectableText(
                     output,
