@@ -1,10 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../explorer/explorer_page.dart';
 import '../git/git_page.dart';
 import '../terminal/terminal_page.dart';
-import 'widgets/sidebar.dart';
-import 'widgets/editor_tabs.dart';
+
+import 'widgets/status_bar.dart';
 
 class WorkspacePage extends StatefulWidget {
   const WorkspacePage({super.key});
@@ -14,47 +16,80 @@ class WorkspacePage extends StatefulWidget {
 }
 
 class _WorkspacePageState extends State<WorkspacePage> {
-  int index = 0;
+  int page = 0;
+
+  late final List<Widget> pages;
+
+  @override
+  void initState() {
+    super.initState();
+
+    pages = [
+      ExplorerPage(
+        path: Directory.current.path,
+      ),
+      const Center(
+        child: Text(
+          "Open a file from Explorer",
+          style: TextStyle(
+            fontSize: 18,
+          ),
+        ),
+      ),
+      const TerminalPage(),
+      const GitPage(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
-    Widget panel;
-
-    switch (index) {
-      case 0:
-        panel = const ExplorerPage();
-        break;
-      case 1:
-        panel = const TerminalPage();
-        break;
-      default:
-        panel = const GitPage();
-    }
-
     return Scaffold(
-      body: SafeArea(
-        child: Row(
-          children: [
-            WorkspaceSidebar(
-              index: index,
-              onSelect: (i) {
-                setState(() {
-                  index = i;
-                });
-              },
-            ),
-            const VerticalDivider(width: 1),
-            Expanded(
-              child: Column(
-                children: [
-                  const EditorTabs(),
-                  const Divider(height: 1),
-                  Expanded(child: panel),
-                ],
-              ),
-            ),
-          ],
-        ),
+      appBar: AppBar(
+        title: const Text("Pocket Dev"),
+      ),
+
+      body: Column(
+        children: [
+          Expanded(
+            child: pages[page],
+          ),
+
+          const StatusBar(
+            text: "Pocket Dev • Ready",
+          ),
+        ],
+      ),
+
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: page,
+
+        onDestinationSelected: (i) {
+          setState(() {
+            page = i;
+          });
+        },
+
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.folder),
+            label: "Explorer",
+          ),
+
+          NavigationDestination(
+            icon: Icon(Icons.code),
+            label: "Editor",
+          ),
+
+          NavigationDestination(
+            icon: Icon(Icons.terminal),
+            label: "Terminal",
+          ),
+
+          NavigationDestination(
+            icon: Icon(Icons.source),
+            label: "Git",
+          ),
+        ],
       ),
     );
   }
