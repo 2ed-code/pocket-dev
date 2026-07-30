@@ -18,6 +18,8 @@ class _ExplorerPageState extends State<ExplorerPage> {
   late Directory current;
   List<FileSystemEntity> files = [];
 
+  final FileService fileService = FileService();
+
   @override
   void initState() {
     super.initState();
@@ -34,7 +36,9 @@ class _ExplorerPageState extends State<ExplorerPage> {
       return a.path.compareTo(b.path);
     });
 
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> delete(FileSystemEntity file) async {
@@ -57,7 +61,7 @@ class _ExplorerPageState extends State<ExplorerPage> {
     );
 
     if (ok == true) {
-      await FileService.delete(file.path);
+      await fileService.delete(file.path);
       load();
     }
   }
@@ -83,7 +87,7 @@ class _ExplorerPageState extends State<ExplorerPage> {
             onPressed: () async {
               final parent = File(file.path).parent.path;
 
-              await FileService.rename(
+              await fileService.rename(
                 file.path,
                 "$parent/${controller.text}",
               );
@@ -122,11 +126,11 @@ class _ExplorerPageState extends State<ExplorerPage> {
     );
 
     if (value == "rename") {
-      rename(file);
+      await rename(file);
     }
 
     if (value == "delete") {
-      delete(file);
+      await delete(file);
     }
   }
 
